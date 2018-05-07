@@ -67,7 +67,7 @@ public class ArchivoPalabras implements Serializable{
      * @param palabra palabra a limpiar
      * @return String de la misma palabra sin mayusculas ni acentos
      */
-    private String limpiarPalabra(String palabra) {
+    public static String limpiarPalabra(String palabra) {
         //si el token tiene signos diacriticos (por ej. tilde) lo normaliza
         if (!Normalizer.isNormalized(palabra, Normalizer.Form.NFD)) {
             //al normalizarlo, queda separada la letra del signo

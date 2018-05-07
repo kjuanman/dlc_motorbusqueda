@@ -1,12 +1,21 @@
 package bll;
 
+import Soporte.ArchivoPalabras;
 import Soporte.TSBArrayList;
+
+import java.util.List;
 
 public class Buscador {
     private TSBArrayList<Ranking> ArrayRanking = new TSBArrayList<>();
 
-    public TSBArrayList<Ranking> buscar(String terminos){
-        String[] terminosAux = terminos.split(Todo lo que no sea alfanumerico);
+    public TSBArrayList<Ranking> buscar(String terminos) {
+        String[] terminosAux = terminos.split(" ");
+        for (int i = 0; i < terminosAux.length; i++) {
+            terminosAux[i] = ArchivoPalabras.limpiarPalabra(terminosAux[i]);
+        }
+
+        Gestor g = Gestor.getGestor();
+        List<String[]> ranking = g.traerItemsPosteo(terminosAux);
 
     }
 
@@ -44,4 +53,6 @@ public class Buscador {
             this.documento = documento;
         }
     }
+
+
 }

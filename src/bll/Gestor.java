@@ -10,11 +10,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -161,8 +157,9 @@ public class Gestor {
             int i = 0; //usado para calcular porcentaje de progreso
             int n = archivosTexto.length;
             for (File archivoTexto : archivosTexto) {
-//                if (archivoTexto.isDirectory()) continue;
+                if (archivoTexto.isDirectory()) continue;
 
+                em.clear();
                 nombreArchivo = archivoTexto.getName();
                 nombreLibro = getNombreLibro(archivoTexto);
 
@@ -298,5 +295,94 @@ public class Gestor {
         indexado.clear();
         indexado.leerArchivo(archivoTexto);
         return indexado.cuentas.keySet();
+    }
+
+    /**
+     * Devuelve una lista ordenada de arreglos donde el primer valor es el nombre del documento y el segundo valor el nombre
+     * del archivo (link). Esta lista esta ordenada segun el puntaje de relevancia hacia la busqueda.
+     * @param terminosAux vector de terminos de la consulta
+     * @return
+     */
+    public List<String[]> traerItemsPosteo(String[] terminosAux) {
+        List<Object[]> res = new ArrayList<>();
+
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("NewPersistenceUnit");
+        EntityManager em = emf.createEntityManager();
+        EntityTransaction et = em.getTransaction();
+
+        et.begin();
+        res = em.createQuery("SELECT d.nDocumento, d.nArchivo, t.nTermino, t.cantDocumentos, ip.frecuencia FROM ItemPosteoEntity ip, TerminoEntity t, DocumentoEntity d WHERE ip.idDocumento = d.idDocumento AND ip.idTermino = t.idTermino order by d.nDocumento").getResultList();
+
+        Map<String, Ranking> puntajes = new HashMap<>();
+        Ranking auxRank;
+        for(Object[] obj : res){
+            auxRank = new Ranking();
+
+            int frecuencia = (int)obj[4];
+            int nR = (int)obj[3]; //cantidad de documentos en la que aparece este unico termino
+            int cantTotalDocs = this.cantidadDocumentos; //cantidad total de documentos en BD
+
+            double puntaje = (frecuencia * Math.log(cantTotalDocs/nR));
+
+            auxRank.setnArchivo((String)obj[1]);
+            auxRank.setPuntaje(puntaje);
+            puntajes.put((String)obj[0],auxRank);
+        }
+
+
+        List<Ranking> auxListRanking = new ArrayList<>();
+
+        puntajes.forEach((k,v)->{
+            auxListRanking.add(v);
+        });
+
+        Collections.sort(auxListRanking);
+
+        List<String []> resStringList = new ArrayList<>();
+        String [] aux = new String[2];
+        auxListRanking.forEach((v)->{
+            aux[0]=v.getnDocumento();
+            aux[1]=v.getnArchivo();
+            resStringList.add(aux.clone());
+        });
+
+        return resStringList;
+
+
+    }
+
+    public class Ranking implements Comparable<Ranking>{
+        private String nDocumento;
+        private String nArchivo;
+        private double puntaje;
+
+        public String getnArchivo() {
+            return nArchivo;
+        }
+
+        public void setnArchivo(String nArchivo) {
+            this.nArchivo = nArchivo;
+        }
+
+        public double getPuntaje() {
+            return puntaje;
+        }
+
+        public void setPuntaje(double puntaje) {
+            this.puntaje = puntaje;
+        }
+
+        @Override
+        public int compareTo(Ranking r) {
+            return ((Double) getPuntaje()).compareTo(r.getPuntaje());
+        }
+
+        public String getnDocumento() {
+            return nDocumento;
+        }
+
+        public void setnDocumento(String nDocumento) {
+            this.nDocumento = nDocumento;
+        }
     }
 }
