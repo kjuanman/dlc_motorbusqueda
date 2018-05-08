@@ -1,9 +1,0 @@
--Traer String[] separando por espacios y caracteres que no sean alfanumericos
-
--En Gestor levantar todos los posteos con las palabras del String[] anterior
-
--Recorrer los posteos por documento y realizar el cálculo del peso
-
--Ir guardando los pesos en un Hash del tipo Documento-Ranking(peso)
-
--Mostrar documentos de mayor a menos peso
