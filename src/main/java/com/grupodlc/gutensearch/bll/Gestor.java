@@ -272,7 +272,7 @@ public class Gestor {
                 acumPuntaje = aux.puntaje;
             }
             auxRank.setPuntaje(acumPuntaje + puntaje);
-            puntajes.put((String)obj[0],auxRank);
+            puntajes.put((String)obj[1],auxRank);
         }
 
 
