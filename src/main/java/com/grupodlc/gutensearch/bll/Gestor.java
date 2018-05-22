@@ -181,26 +181,54 @@ public class Gestor {
         String res = "";
         String cadena;
         FileReader f = null;
+        Pattern p = Pattern.compile("(?:.*)Project Gutenberg(?:'s)?(?i)(?: EBook| EText(?::)?| edition)?(?: of)? (.*)");
+        Pattern psinby = Pattern.compile("(.*)(?i)(?: (by|attributed).*)+");
+        Pattern ptitle = Pattern.compile("Title: (.*)");
         try {
             f = new FileReader(archivoTexto);
             BufferedReader b = new BufferedReader(f);
             while ((cadena = b.readLine()) != null) {
-                if (cadena.contains("Project Gutenberg Etext")){
-                    String aux = cadena.replace(("*"),"");
-                    String aux2 = aux.replace(("of "),"");
-                    String aux3 = aux2.replace(('"'),' ');
-                    String aux4 = aux3.replace("The Project Gutenberg Etext", "").trim();
-                    res = aux4.replace("Project Gutenberg Etext", "").trim();
+                if (cadena.contains("Project Gutenberg") && !(cadena.contains("multiple editions") || cadena.contains("official release date") || cadena.contains("To access") ||
+                        cadena.contains("this or any other") || cadena.contains("Information on contacting") || cadena.contains("This is the January") ||
+                        cadena.contains("the bottom of this file") || cadena.contains("how to get involved") )) {
+                    // borro asteriscos, comas y punto y comas
+                    cadena = cadena.replaceAll("[,\\*;]","");
+                    Matcher m = p.matcher(cadena);
+                    if ( m.find() ) {
+                        res = m.group(1);
+                    } else {
+                        System.out.println("no encontro");
+                    }
+                    Matcher msinby = psinby.matcher(res);
+                    if ( msinby.find() ) {
+                        res = msinby.group(1);
+                    }
+
+                    // titulos multilineas:
+                    if ( res.endsWith(":"))
+                        res = res + " " + b.readLine();
+
+                    if ( res.endsWith("of") || res.endsWith("the")) {
+                        res = res +" "+ b.readLine().replaceAll("[,\\*;]","");
+                        Matcher msinby2 = psinby.matcher(res);
+                        if (msinby2.find()) {
+                            res = msinby2.group(1);
+                        }
+                    }
+
+                    // si hay "(" pero no ")" sigo buscando
+                    if ( ! (res.contains("(") && ! res.contains(")")) )
+                        break;
+//                  System.out.println(res);
+
+                }
+                else if (cadena.contains("Title:")){
+                    Matcher mtitle = ptitle.matcher(cadena);
+                    if ( mtitle.find() ) {
+                        res = mtitle.group(1);
+                    }
                     break;
                 }
-                /*else if (cadena.contains("The Project Gutenberg Etext of")){
-                    String aux = cadena.replace(("*"),"");
-                    String aux2 = aux.replace(("of "),"");
-                    String aux3 = aux.replace(('"'),' ');
-                    String aux3 = aux3.replace("The Project Gutenberg Etext", "").trim();
-                    res = aux3.trim();
-                    break;
-                }*/
             }
             b.close();
             f.close();
